@@ -1,35 +1,34 @@
-import bcrypt from "bcryptjs";
-import { readFile, writeFile } from "fs/promises";
+import bcrypt from 'bcrypt';
+import { readFileSync, writeFileSync, existsSync } from 'node:fs';
 
 const saltRounds = 10;
-const myPlaintextPassword = process.argv[2];
+const fileName = 'passwords.txt';
+const inputPassword = process.argv[2];
 
-if (!myPlaintextPassword) {
-    console.log("Please provide a password as an argument");
+// 1. Перевірка введення
+if (!inputPassword) {
+    console.error("Помилка: введіть пароль (node password.js <ваш_пароль>)");
     process.exit(1);
 }
 
-const testHashing = async () => {
-    let data = '';
-
-    try {
-        data = (await readFile('password.txt', 'utf-8')).trim();
-    } catch (error) {
-        if (error.code !== 'ENOENT') {
-            console.error("Read error:", error.message);
-            return;
+// 2. Логіка роботи
+try {
+    if (!existsSync(fileName)) {
+        // Якщо файлу немає — створюємо новий хеш
+        const hash = await bcrypt.hash(inputPassword, saltRounds);
+        writeFileSync(fileName, hash);
+        console.log(`✅ Пароль вперше встановлено. Хеш збережено у ${fileName}`);
+    } else {
+        // Якщо файл є — порівнюємо
+        const storedHash = readFileSync(fileName, 'utf8').trim();
+        const isMatch = await bcrypt.compare(inputPassword, storedHash);
+        
+        if (isMatch) {
+            console.log("🔓 Авторизовано успішно!");
+        } else {
+            console.log("❌ Невірний пароль!");
         }
     }
-
-    if (!data) {
-        const hash = await bcrypt.hash(myPlaintextPassword, saltRounds);
-        await writeFile('password.txt', hash);
-        console.log('Password hashed and saved');
-    } else {
-        const isMatch = await bcrypt.compare(myPlaintextPassword, data);
-
-        console.log(isMatch ? 'Password is correct' : 'Password is incorrect');
-    }
-};
-
-testHashing();
+} catch (err) {
+    console.error("Помилка:", err.message);
+}
