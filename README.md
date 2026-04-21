@@ -1,8 +1,6 @@
-# Password Hashing with bcryptjs
+# Password Hasher
+Проста утиліта на Node.js для хешування паролів за допомогою bcrypt.
 
-Simple Node.js CLI tool for hashing and verifying passwords.
-
-## Installation
-
-```bash
-npm install
+## Запуск
+1. `npm install`
+2. `node password.js ваш_пароль`
